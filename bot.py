@@ -35,7 +35,7 @@ class States(StatesGroup):
 
 
 @dp.message_handler(commands=["start"])
-async def start(message: types.Message, state: FSMContext):
+async def start(message: types.Message, state: FSMContext) -> None:
     """/start command handler. Changes the bot state to 'waiting' for sticker.
 
     Args:
@@ -50,7 +50,7 @@ async def start(message: types.Message, state: FSMContext):
 
 
 @dp.message_handler(state=States.waiting, content_types=types.ContentType.ANY)
-async def sticker_handler(message: types.Message, state: FSMContext):
+async def sticker_handler(message: types.Message, state: FSMContext) -> None:
     """Sticker handler.
 
     Args:
@@ -63,22 +63,47 @@ async def sticker_handler(message: types.Message, state: FSMContext):
 
     if message.sticker:
         set_name = message.sticker.set_name
-
         sticker_set = await bot.get_sticker_set(set_name)
-        sticker_images = []
-
         logger.info("Found sticker set, length: %s", len(sticker_set.stickers))
+        sticker_list = await get_sticker_list(sticker_set)
+        link = await upload_stickers_to_signal(sticker_list)
 
-        for count, sticker in enumerate(sticker_set.stickers):
-            logger.info("Downloading %s sticker", count + 1)
-            sticker_id = sticker.file_id
+        await message.reply(link)
 
-            file = await bot.get_file(sticker_id)
-            file_path = file.file_path
 
-            result: io.BytesIO = await bot.download_file(file_path)
-            sticker_images.append(result)
-        print(sticker_images)
+async def upload_stickers_to_signal(sticker_list: list) -> str:
+    """Upload list of stickers to Signal and return a link
+
+    Args:
+        sticker_list (list): list of image io.BytesIO objects
+
+    Returns:
+        str: link to signal sticker set
+    """
+    pass
+
+
+async def get_sticker_list(sticker_set: types.sticker_set) -> list:
+    """Make a list of io.BytesIO objects with sticker images
+    from given sticker_set
+
+    Args:
+        sticker_set (types.sticker_set): sticker set to turn to image list
+
+    Returns:
+        list: sticker_list
+    """
+    sticker_list = []
+    for count, sticker in enumerate(sticker_set.stickers):
+        logger.info("Downloading %s sticker", count + 1)
+        sticker_id = sticker.file_id
+
+        file = await bot.get_file(sticker_id)
+        file_path = file.file_path
+
+        result: io.BytesIO = await bot.download_file(file_path)
+        sticker_list.append(result)
+    return sticker_list
 
 
 if __name__ == "__main__":
