@@ -1,3 +1,4 @@
+import io
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
@@ -61,13 +62,23 @@ async def sticker_handler(message: types.Message, state: FSMContext):
         await message.reply("Not a sticker!")
 
     if message.sticker:
-        SET_NAME = message.sticker.set_name
-        STICKER_ID = message.sticker.file_id
+        set_name = message.sticker.set_name
 
-        file = await bot.get_file(STICKER_ID)
-        file_path = file.file_path
+        sticker_set = await bot.get_sticker_set(set_name)
+        sticker_images = []
 
-        await bot.download_file(file_path, "sticker")
+        logger.info("Found sticker set, length: %s", len(sticker_set.stickers))
+
+        for count, sticker in enumerate(sticker_set.stickers):
+            logger.info("Downloading %s sticker", count + 1)
+            sticker_id = sticker.file_id
+
+            file = await bot.get_file(sticker_id)
+            file_path = file.file_path
+
+            result: io.BytesIO = await bot.download_file(file_path)
+            sticker_images.append(result)
+        print(sticker_images)
 
 
 if __name__ == "__main__":
