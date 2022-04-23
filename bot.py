@@ -1,4 +1,3 @@
-from ast import parse
 import json
 import logging
 import io
@@ -124,7 +123,7 @@ async def upload_stickers_to_signal(
 
     # Add the stickers here, with their emoji
     # Accepted format:
-    # - Non-animated webp
+    # - Non-animated webpz
     # - PNG
     # - GIF <100kb for animated stickers
     for sticker in sticker_list:
@@ -140,6 +139,7 @@ async def upload_stickers_to_signal(
             link = (
                 f"https://signal.art/addstickers/#pack_id={pack_id}&pack_key={pack_key}"
             )
+            logger.info("Pack uploaded, link = %s", link)
         except Exception as e:
             logger.error("Couldn't upload sticker pack! Exception: %s", e)
             link = "Error, couldn't upload sticker set."
